@@ -8,11 +8,11 @@ from src.middlewares.request_id import RequestIdMiddleware
 from src.middlewares.auth import admin
 from src.models.entities import Audit
 from src.utils.serialize import record
-from src.routes import auth, nodes, scenarios, drills
+from src.routes import auth, nodes, scenarios, drills, proofs
 app = FastAPI(title='值班切主演练沙盘')
 app.add_middleware(ErrorMiddleware)
 app.add_middleware(RequestIdMiddleware)
-for module in (auth, nodes, scenarios, drills): app.include_router(module.router)
+for module in (auth, nodes, scenarios, drills, proofs): app.include_router(module.router)
 @app.get('/health')
 def health(db=Depends(get_db)):
     db.execute(text('SELECT 1')); Redis.from_url(REDIS_URL).ping()

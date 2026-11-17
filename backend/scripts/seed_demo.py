@@ -1,11 +1,15 @@
 import os
 from sqlalchemy import select
 from src.config.database import Base, engine, Session
-from src.models.entities import User, Node, Scenario
+from src.models.entities import User, Node, Scenario, ProofStoreState
 from src.utils.security import hash_password
 
 def seed():
     Base.metadata.create_all(engine)
+    with Session() as db:
+        if not db.get(ProofStoreState, 1):
+            db.add(ProofStoreState(id=1, version=0))
+            db.commit()
     if os.getenv('SEED_DEMO','true').lower() != 'true': return
     with Session() as db:
         for role in ('admin','operator','viewer'):

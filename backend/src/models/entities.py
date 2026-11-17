@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import String, Integer, Boolean, JSON, DateTime, ForeignKey
+from sqlalchemy import String, Integer, Boolean, JSON, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 from src.config.database import Base
 
@@ -43,3 +43,31 @@ class Audit(Base):
     actor: Mapped[str] = mapped_column(String(120))
     action: Mapped[str] = mapped_column(String(120))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+class ProofStoreState(Base):
+    # Singleton row (id=1). The version counter increments once per persisted
+    # batch; ingest and drill enqueue both lock this row FOR UPDATE so a drill
+    # always freezes one complete proof version.
+    __tablename__ = 'proof_store_state'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    version: Mapped[int] = mapped_column(Integer, default=0)
+class ProofBatch(Base):
+    __tablename__ = 'proof_batches'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    batch_key: Mapped[str] = mapped_column(String(80), unique=True)
+    node_name: Mapped[str] = mapped_column(String(80))
+    committed_position: Mapped[int] = mapped_column(Integer)
+    committed_digest: Mapped[str] = mapped_column(String(64))
+    segment_count: Mapped[int] = mapped_column(Integer)
+    version: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+class ProofSegment(Base):
+    __tablename__ = 'proof_segments'
+    __table_args__ = (UniqueConstraint('node_name', 'position', name='uq_segment_node_position'),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    batch_id: Mapped[int] = mapped_column(ForeignKey('proof_batches.id'))
+    node_name: Mapped[str] = mapped_column(String(80))
+    position: Mapped[int] = mapped_column(Integer)
+    term: Mapped[int] = mapped_column(Integer)
+    content: Mapped[str] = mapped_column(String(500))
+    prev_digest: Mapped[str] = mapped_column(String(64))
+    digest: Mapped[str] = mapped_column(String(64))

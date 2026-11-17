@@ -19,7 +19,8 @@ while True:
                 if job:
                     job.status = 'running'
                     try:
-                        job.result = elect(job.snapshot['nodes'], job.snapshot['scenario'])
+                        job.result = elect(job.snapshot['nodes'], job.snapshot['scenario'],
+                                           job.snapshot.get('proofs'))
                         job.status = 'completed'
                     except ValueError as exc:
                         job.result = {'error': str(exc), 'simulation': True}
