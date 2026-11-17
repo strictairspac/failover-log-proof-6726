@@ -1,0 +1,1 @@
+export const session={token:localStorage.getItem('drill-token')||'',role:localStorage.getItem('drill-role')||'',save(d){this.token=d.access_token;this.role=d.role;localStorage.setItem('drill-token',this.token);localStorage.setItem('drill-role',this.role);},clear(){this.token='';this.role='';localStorage.removeItem('drill-token');localStorage.removeItem('drill-role');}};

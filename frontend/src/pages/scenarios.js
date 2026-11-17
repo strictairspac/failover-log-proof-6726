@@ -1,0 +1,8 @@
+import {store} from '../stores/entities.js';
+import {session} from '../stores/session.js';
+import {scenariosAPI} from '../api/entities.js';
+import {table} from '../components/common/table.js';
+import {esc,formObject} from '../utils/html.js';
+import {action} from '../hooks/action.js';
+export function scenariosPage(){return `<div class="section-title"><h2>故障剧本</h2><span>正向与阻断条件均可复现</span></div>${table(['剧本','主节点故障','旧主隔离','允许日志损失','任期下限'],store.scenarios.map(s=>[esc(s.name),s.fail_primary?'注入隔离':'保留状态',s.fence_primary?'有证明':'无证明',s.max_data_loss,s.required_term]))}<section class="split"><div><h2>写下一次演练条件</h2><p>故障、隔离与数据损失分别记录。没有旧主写入隔离证明时，即使票数够，也将阻止选主。</p><p class="big-note">先证明安全，再给出候选。</p></div>${session.role!=='viewer'?`<form id="scenario-form"><label>剧本名称<input name="name" value="shift-20261117" required maxlength="100"></label><div class="fields"><label>允许日志损失<input name="max_data_loss" type="number" min="0" value="0" required></label><label>新任期下限<input name="required_term" type="number" min="1" value="7" required></label></div><label class="check"><input name="fail_primary" type="checkbox" checked> 注入主节点隔离</label><label class="check"><input name="fence_primary" type="checkbox" checked> 提供旧主写入隔离证明</label><button type="submit">保存故障剧本</button></form>`:'<p class="readonly">观察员可查看剧本，新增需要操作员或管理员。</p>'}</section>`;}
+export function bindScenarios(render){action(document.querySelector('#scenario-form'),async form=>{const d=formObject(form);for(const k of ['max_data_loss','required_term'])d[k]=Number(d[k]);for(const k of ['fail_primary','fence_primary'])d[k]=form.elements[k].checked;await scenariosAPI.create(d);await render();});}
